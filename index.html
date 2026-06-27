@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immersive Language Trainer</title>
+    <!-- Tailwind CSS for high-fidelity component UI design -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        /* Custom Duolingo-style button elevations and brand colors */
+        .duo-btn-green {
+            background-color: #58cc02;
+            border-bottom: 4px solid #46a302;
+            transition: filter 0.1s ease;
+        }
+        .duo-btn-green:active {
+            border-bottom-width: 0px;
+            margin-top: 4px;
+        }
+        .duo-btn-gray {
+            background-color: #ffffff;
+            border: 2px solid #e5e5e5;
+            border-bottom: 4px solid #e5e5e5;
+        }
+        .duo-btn-gray:active {
+            border-bottom-width: 2px;
+            margin-top: 2px;
+        }
+        .word-bank-tile {
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.1s ease;
+        }
+    </style>
+</head>
+<body class="bg-[#ffffff] text-[#3c3c3c] font-sans antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Top Navigation Header / Progress Bar Container -->
+    <header class="border-b-2 border-[#e5e5e5] py-4 px-6 sticky top-0 bg-white z-50">
+        <div class="max-w-xl mx-auto flex items-center justify-between gap-4">
+            <button id="close-btn" class="text-[#afafaf] font-bold text-xl hover:text-[#3c3c3c]">✕</button>
+            <div class="w-full bg-[#e5e5e5] h-4 rounded-full overflow-hidden">
+                <div id="progress-bar" class="bg-[#58cc02] h-full w-0 transition-all duration-300"></div>
+            </div>
+            <div class="flex items-center gap-1 font-bold text-[#ff9600]">
+                <span>🔥</span><span id="streak-count">1</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Dynamic Viewport -->
+    <main class="flex-grow flex items-center justify-center p-6">
+        <div class="w-full max-w-xl">
+            
+            <!-- VIEW 1: Specialized Personalization Setup Form -->
+            <section id="setup-view" class="space-y-6">
+                <div class="text-center space-y-2">
+                    <h1 class="text-2xl font-extrabold text-[#3c3c3c]">Configure Your Mission</h1>
+                    <p class="text-[#777777]">Military linguist alignment: Tailoring full sentences to your operational context.</p>
+                </div>
+
+                <div class="space-y-4 bg-gray-50 p-6 rounded-2xl border-2 border-[#e5e5e5]">
+                    <div>
+                        <label class="block font-bold mb-2 text-sm uppercase tracking-wide text-[#777777]">Target Language</label>
+                        <select id="input-language" class="w-full p-3 rounded-xl border-2 border-[#e5e5e5] bg-white font-medium focus:outline-none focus:border-[#58cc02]">
+                            <option value="Spanish">Spanish (Category 1)</option>
+                            <option value="French">French (Category 1)</option>
+                            <option value="German">German (Category 1)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold mb-2 text-sm uppercase tracking-wide text-[#777777]">Your Profession / Main Focus</label>
+                        <input id="input-profession" type="text" placeholder="e.g., Economist, Student, Software Engineer" class="w-full p-3 rounded-xl border-2 border-[#e5e5e5] bg-white font-medium focus:outline-none focus:border-[#58cc02]">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold mb-2 text-sm uppercase tracking-wide text-[#777777]">Core Hobbies / Interests</label>
+                        <input id="input-hobbies" type="text" placeholder="e.g., Stock Trading, Politics, Cooking" class="w-full p-3 rounded-xl border-2 border-[#e5e5e5] bg-white font-medium focus:outline-none focus:border-[#58cc02]">
+                    </div>
+                </div>
+
+                <button id="start-btn" class="w-full duo-btn-green text-white font-bold py-4 rounded-xl text-lg uppercase tracking-wider">
+                    Initialize Training
+                </button>
+            </section>
+
+            <!-- VIEW 2: Interactive Sentence Builder / Word Bank Component -->
+            <section id="quiz-view" class="hidden space-y-8">
+                <!-- Instruction Header -->
+                <div class="space-y-2">
+                    <h2 class="text-xl font-extrabold tracking-wide text-[#777777] uppercase text-sm">Translate this contextual sentence:</h2>
+                    <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border-2 border-[#e5e5e5]">
+                        <div class="text-4xl">🦉</div>
+                        <div class="bg-gray-50 border-2 border-[#e5e5e5] rounded-xl p-3 relative after:content-[''] after:absolute after:top-1/2 after:-left-2 after:-mt-2 after:border-t-8 after:border-t-transparent after:border-r-8 after:border-r-gray-50 after:border-b-8 after:border-b-transparent">
+                            <p id="target-sentence-prompt" class="font-bold text-lg text-[#3c3c3c]"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Workspace Selection Area -->
+                <div id="selection-workspace" class="min-h-[70px] border-b-2 border-[#e5e5e5] py-2 flex flex-wrap gap-2 items-center">
+                    <!-- Dynamic selections injected here -->
+                </div>
+
+                <!-- Scrambled Word Bank Component -->
+                <div id="word-bank" class="flex flex-wrap gap-3 justify-center pt-4">
+                    <!-- Dynamic selectable choices injected here -->
+                </div>
+            </section>
+
+            <!-- VIEW 3: Summary Achievement Screen -->
+            <section id="summary-view" class="hidden text-center space-y-6 py-8">
+                <div class="text-6xl animate-bounce">🏆</div>
+                <h2 class="text-3xl font-extrabold text-[#3c3c3c]">Mission Accomplished!</h2>
+                <p class="text-lg text-[#777777] max-w-sm mx-auto">You processed specialized operational sentences under the intensive sentence-first protocol successfully.</p>
+                <button id="restart-btn" class="w-full duo-btn-green text-white font-bold py-4 rounded-xl text-lg uppercase tracking-wider">
+                    Train Again
+                </button>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Bottom Action Footer Banner (Evaluations & Verification States) -->
+    <footer id="action-footer" class="border-t-2 border-[#e5e5e5] py-6 px-6 bg-white hidden">
+        <div class="max-w-xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
+            <div id="feedback-message" class="flex items-center gap-3 font-bold text-lg hidden">
+                <span id="feedback-icon" class="text-2xl"></span>
+                <span id="feedback-text"></span>
+            </div>
+            <button id="action-btn" class="w-full sm:w-auto px-12 duo-btn-green text-white font-bold py-4 rounded-xl text-lg uppercase tracking-wider ml-auto">
+                Check Answer
+            </button>
+        </div>
+    </footer>
+
+    <!-- Core Business Logic Script Execution -->
+    <script>
+        // Database containing multi-tiered contextual translation maps
+        const sentenceDatabase = {
+            Spanish: [
+                { keyword: "economist", prompt: "The economist analyzes the global marketplace.", correct: ["El", "economista", "analiza", "el", "mercado", "global."], options: ["El", "economista", "analiza", "el", "mercado", "global.", "perro", "computadora", "correr"] },
+                { keyword: "trading", prompt: "I execute stock transactions daily.", correct: ["Ejecuto", "transacciones", "de", "acciones", "diariamente."], options: ["Ejecuto", "transacciones", "de", "acciones", "diariamente.", "cocinar", "libro", "verde"] },
+                { keyword: "politics", prompt: "Political international relations are highly complex.", correct: ["Las", "relaciones", "políticas", "internacionales", "son", "complejas."], options: ["Las", "relaciones", "políticas", "internacionales", "son", "complejas.", "comer", "azul", "agua"] },
+                { default: true, prompt: "The rapid system requires total operational immersion.", correct: ["El", "sistema", "rápido", "requiere", "inmersión", "operacional", "total."], options: ["El", "sistema", "rápido", "requiere", "inmersión", "operacional", "total.", "hola", "noche"] }
+            ],
+            French: [
+                { keyword: "economist", prompt: "The economist analyzes the global marketplace.", correct: ["L'économiste", "analyse", "le", "marché", "global."], options: ["L'économiste", "analyse", "le", "marché", "global.", "chat", "pomme", "rouge"] },
+                { keyword: "trading", prompt: "I execute stock transactions daily.", correct: ["J'exécute", "des", "transactions", "boursières", "tous", "les", "jours."], options: ["J'exécute", "des", "transactions", "boursières", "tous", "les", "jours.", "manger", "voiture"] },
+                { default: true, prompt: "The rapid system requires total operational immersion.", correct: ["Le", "système", "rapide", "exige", "une", "immersion", "totale."], options: ["Le", "système", "rapide", "exige", "une", "immersion", "totale.", "bleu", "maison"] }
+            ],
+            German: [
+                { keyword: "economist", prompt: "The economist analyzes the global marketplace.", correct: ["Der", "Ökonom", "analysiert", "den", "globalen", "Markt."], options: ["Der", "Ökonom", "analysiert", "den", "globalen", "Markt.", "Hund", "Katze", "Brot"] },
+                { default: true, prompt: "The rapid system requires total operational immersion.", correct: ["Das", "schnelle", "System", "erfordert", "vollständiges", "Eintauchen."], options: ["Das", "schnelle", "System", "erfordert", "vollständiges", "Eintauchen.", "Apfel", "Wasser"] }
+            ]
+        };
+
+        // Application State State-Machine Initialization
+        let activeProfile = { language: 'Spanish', profession: '', hobbies: '' };
+        let selectedSentences = [];
+        let currentQuestionIndex = 0;
+        let selectedWords = [];
+
+        // DOM Handle Mappings
+        const setupView = document.getElementById('setup-view');
+        const quizView = document.getElementById('quiz-view');
+        const summaryView = document.getElementById('summary-view');
+        const actionFooter = document.getElementById('action-footer');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackText = document.getElementById('feedback-text');
+        const actionBtn = document.getElementById('action-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const promptContainer = document.getElementById('target-sentence-prompt');
+        const workspace = document.getElementById('selection-workspace');
+        const wordBank = document.getElementById('word-bank');
+
+        // Event Listener Bindings
+        document.getElementById('start-btn').addEventListener('click', parseProfileAndInitialize);
+        actionBtn.addEventListener('click', handleFooterAction);
+        document.getElementById('restart-btn').addEventListener('click', resetToSetup);
+        document.getElementById('close-btn').addEventListener('click', resetToSetup);
+
+        function parseProfileAndInitialize() {
+            activeProfile.language = document.getElementById('input-language').value;
+            activeProfile.profession = document.getElementById('input-profession').value.toLowerCase();
+            activeProfile.hobbies = document.getElementById('input-hobbies').value.toLowerCase();
+
+            compileCustomLessonPlan();
+
+            if (selectedSentences.length === 0) {
+                alert("No custom training modules matched. Reverting to structural presets.");
+                return;
+            }
+
+            currentQuestionIndex = 0;
+            setupView.classList.add('hidden');
+            quizView.classList.remove('hidden');
+            actionFooter.classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        function compileCustomLessonPlan() {
+            const languagePool = sentenceDatabase[activeProfile.language] || [];
+            let priorityMatches = [];
+            let fallbackMatches = [];
+
+            languagePool.forEach(item => {
+                if (item.default) {
+                    fallbackMatches.push(item);
+                } else if (
+                    (activeProfile.profession && item.keyword.includes(activeProfile.profession)) ||
+                    (activeProfile.hobbies && item.keyword.includes(activeProfile.hobbies))
+                ) {
+                    priorityMatches.push(item);
+                }
+            });
+
+            // Merge targeted specialized selections with core foundational logic components
+            selectedSentences = [...priorityMatches, ...fallbackMatches].slice(0, 3);
+        }
+
+        function loadQuestion() {
+            selectedWords = [];
+            workspace.innerHTML = '';
+            resetFooterState();
+            updateProgressTrack();
+
+            const currentData = selectedSentences[currentQuestionIndex];
+            promptContainer.innerText = currentData.prompt;
+
+            // Generate scrambled rendering of word selection matrix
+            const scrambled = [...currentData.options].sort(() => Math.random() - 0.5);
+            wordBank.innerHTML = '';
+            
+            scrambled.forEach((word, index) => {
+                const button = document.createElement('button');
+                button.className = "word-bank-tile duo-btn-gray px-4 py-2.5 rounded-xl font-bold text-base bg-white border-2 border-[#e5e5e5]";
+                button.innerText = word;
+                button.dataset.wordIndex = index;
+                button.addEventListener('click', () => selectWord(button, word));
+                wordBank.appendChild(button);
+            });
+        }
+
+        function selectWord(element, word) {
+            if (element.classList.contains('opacity-30')) return; // Prevents selection of consumed tokens
+            
+            element.classList.add('opacity-30');
+            
+            const selectedTile = document.createElement('button');
+            selectedTile.className = "duo-btn-gray px-4 py-2.5 rounded-xl font-bold text-base bg-white border-2 border-[#e5e5e5] animate-smallPop";
+            selectedTile.innerText = word;
+            
+            // Link references together to manage tracking states seamlessly
+            selectedTile.addEventListener('click', () => {
+                selectedTile.remove();
+                element.classList.remove('opacity-30');
+                selectedWords = selectedWords.filter(w => w !== word);
+            });
+
+            workspace.appendChild(selectedTile);
+            selectedWords.push(word);
+        }
+
+        function handleFooterAction() {
+            const currentData = selectedSentences[currentQuestionIndex];
+
+            if (actionBtn.dataset.state === 'next') {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < selectedSentences.length) {
+                    loadQuestion();
+                } else {
+                    displaySummaryMetrics();
+                }
+                return;
+            }
+
+            // Target verification mapping validation logic
+            const isCorrect = JSON.stringify(selectedWords) === JSON.stringify(currentData.correct);
+            renderFooterFeedback(isCorrect);
+        }
+
+        function renderFooterFeedback(isCorrect) {
+            feedbackMessage.classList.remove('hidden');
+            
+            if (isCorrect) {
+                actionFooter.className = "border-t-2 border-[#b8f28b] py-6 px-6 bg-[#d7ffb8] text-[#58a700]";
+                feedbackIcon.innerText = "✔️";
+                feedbackText.innerText = "Excellent comprehension performance!";
+                actionBtn.className = "w-full sm:w-auto px-12 duo-btn-green text-white font-bold py-4 rounded-xl text-lg uppercase tracking-wider ml-auto";
+            } else {
+                actionFooter.className = "border-t-2 border-[#ffc4c4] py-6 px-6 bg-[#ffd8d8] text-[#ea2b2b]";
+                feedbackIcon.innerText = "❌";
+                feedbackText.innerText = "System divergence detected. Review structure context.";
+                actionBtn.className = "w-full sm:w-auto px-12 bg-[#ff4b4b] border-b-4 border-[#ea2b2b] text-white font-bold py-4 rounded-xl text-lg uppercase tracking-wider ml-auto";
+            }
+
+            actionBtn.innerText = "Continue";
+            actionBtn.dataset.state = 'next';
+        }
+
+        function resetFooterState() {
+            actionFooter.className = "border-t-2 border-[#e5e5e5] py-6 px-6 bg-white";
+            feedbackMessage.classList.add('hidden');
+            actionBtn.innerText = "Check Answer";
+            actionBtn.className = "w-full sm:w-auto px-12 duo-btn-green text-white font-bold py-4 rounded-xl text-lg uppercase tracking-wider ml-auto";
+            actionBtn.dataset.state = 'check';
+        }
+
+        function updateProgressTrack() {
+            const percentage = (currentQuestionIndex / selectedSentences.length) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
+
+        function displaySummaryMetrics() {
+            progressBar.style.width = '100%';
+            quizView.classList.add('hidden');
+            actionFooter.classList.add('hidden');
+            summaryView.classList.remove('hidden');
+        }
+
+        function resetToSetup() {
+            summaryView.classList.add('hidden');
+            quizView.classList.add('hidden');
+            actionFooter.classList.add('hidden');
+            setupView.classList.remove('hidden');
+            progressBar.style.width = '0%';
+        }
+    </script>
+</body>
+</html>
